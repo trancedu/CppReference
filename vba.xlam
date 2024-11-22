@@ -1,0 +1,44 @@
+Sub Auto_Open()
+    On Error Resume Next
+    Call LoadAddInThrowError
+    If Err.Number <> 0 Then
+        MsgBox "Error during add-in loading: " & Err.Description, vbCritical, "Error"
+    End If
+    On Error GoTo 0
+End Sub
+
+
+Sub LoadAddInThrowError()
+    Dim addInPath As String
+    Dim addIn As AddIn
+
+    ' Build the path to the add-in
+    addInPath = ThisWorkbook.Path & "\LoadData.xlam"
+
+    ' Check if the file exists
+    If Dir(addInPath) = "" Then
+        ' Raise an error if the file does not exist
+        Err.Raise vbObjectError + 1000, "LoadAddIn", "Add-in file not found at: " & addInPath
+    End If
+
+    ' Try to add the add-in
+    Set addIn = Application.AddIns.Add(Filename:=addInPath, CopyFile:=False)
+
+    ' Check if the add-in is added successfully
+    If addIn Is Nothing Then
+        ' Raise an error if adding failed
+        Err.Raise vbObjectError + 1001, "LoadAddIn", "Failed to add the add-in."
+    End If
+
+    ' Install the add-in
+    addIn.Installed = True
+
+    ' Check if the add-in was successfully installed
+    If Not addIn.Installed Then
+        ' Raise an error if installation failed
+        Err.Raise vbObjectError + 1002, "LoadAddIn", "Failed to install the add-in."
+    End If
+
+    ' Display success message
+    MsgBox "Add-in loaded and installed successfully from: " & addInPath, vbInformation, "Success"
+End Sub
