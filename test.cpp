@@ -5,34 +5,32 @@
 #include <type_traits>
 
 template <typename Duration>
-std::string convertToOracleInterval(Duration duration) {
-    static_assert(std::is_convertible_v<Duration, std::chrono::seconds>,
-                  "Duration must be convertible to std::chrono::seconds");
-
+std::string convertToOracleDSInterval(Duration duration) {
     using namespace std::chrono;
 
-    // Convert duration to total seconds
-    auto total_seconds = duration_cast<seconds>(duration).count();
+    // Ensure the input duration can be represented as milliseconds
+    auto total_milliseconds = duration_cast<milliseconds>(duration).count();
 
-    // Extract days, hours, minutes, and seconds
-    auto days = total_seconds / 86400; // 1 day = 86400 seconds
-    total_seconds %= 86400;
+    // Extract days, hours, minutes, seconds, and milliseconds
+    auto days = total_milliseconds / 86400000; // 1 day = 86400000 milliseconds
+    total_milliseconds %= 86400000;
 
-    auto hours = total_seconds / 3600; // 1 hour = 3600 seconds
-    total_seconds %= 3600;
+    auto hours = total_milliseconds / 3600000; // 1 hour = 3600000 milliseconds
+    total_milliseconds %= 3600000;
 
-    auto minutes = total_seconds / 60; // 1 minute = 60 seconds
-    total_seconds %= 60;
+    auto minutes = total_milliseconds / 60000; // 1 minute = 60000 milliseconds
+    total_milliseconds %= 60000;
 
-    auto seconds = total_seconds;
+    auto seconds = total_milliseconds / 1000; // 1 second = 1000 milliseconds
+    auto milliseconds = total_milliseconds % 1000;
 
-    // Construct the Oracle INTERVAL string
+    // Construct the string in TO_DSINTERVAL-compatible format
     std::ostringstream oss;
-    oss << "INTERVAL '" << days << " "
+    oss << days << " "
         << std::setfill('0') << std::setw(2) << hours << ":"
         << std::setfill('0') << std::setw(2) << minutes << ":"
-        << std::setfill('0') << std::setw(2) << seconds
-        << "' DAY TO SECOND";
+        << std::setfill('0') << std::setw(2) << seconds << "."
+        << std::setfill('0') << std::setw(3) << milliseconds;
 
     return oss.str();
 }
@@ -40,14 +38,20 @@ std::string convertToOracleInterval(Duration duration) {
 int main() {
     using namespace std::chrono;
 
-    // Examples with different duration types
-    auto duration1 = seconds(198615);     // 2 days, 10:30:15
-    auto duration2 = minutes(1500);      // 25 hours
-    auto duration3 = hours(72) + seconds(3605); // 3 days + 1:00:05
+    // Example duration (2 days, 10 hours, 30 minutes, 15 seconds, and 123 milliseconds)
+    auto duration = hours(58) + minutes(30) + seconds(15) + milliseconds(123);
 
-    std::cout << "Duration 1: " << convertToOracleInterval(duration1) << '\n';
-    std::cout << "Duration 2: " << convertToOracleInterval(duration2) << '\n';
-    std::cout << "Duration 3: " << convertToOracleInterval(duration3) << '\n';
+    std::string oracle_format = convertToOracleDSInterval(duration);
+    std::cout << "Oracle DSInterval Format: " << oracle_format << '\n';
+
+    auto duration2 = hours(58) + minutes(30) + seconds(15) + milliseconds(123);
+    std::string oracle_format2 = convertToOracleDSInterval(duration2);
+    std::cout << "Oracle DSInterval Format 2: " << oracle_format2 << '\n';
+
+    auto duration3 = hours(0);
+    std::string oracle_format3 = convertToOracleDSInterval(duration3);
+    std::cout << "Oracle DSInterval Format 3: " << oracle_format3 << '\n';
+
 
     return 0;
 }
