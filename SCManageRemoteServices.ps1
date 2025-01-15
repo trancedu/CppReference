@@ -1,8 +1,15 @@
+# Allow the user to pass the service name as a script argument
+param (
+    [string]$serviceName
+)
+
+# Prompt for service name if not provided
+if (-not $serviceName) {
+    $serviceName = Read-Host "Please enter the service name"
+}
+
 # Path to the file containing the list of servers
 $serverListPath = "servers.txt"
-
-# Specify the service name you want to stop and start
-$serviceName = "YourServiceName"
 
 # Read the list of servers from the file
 $servers = Get-Content -Path $serverListPath
