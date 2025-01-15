@@ -25,8 +25,7 @@ function Stop-ServiceOnServer {
     )
     try {
         Write-Host "Stopping $serviceName service on $server..."
-        $stopCommand = "sc.exe \\$server stop $serviceName"
-        $output = Invoke-Expression $stopCommand 2>&1
+        $output = & sc.exe \\$server stop $serviceName 2>&1
         if ($output -match "FAILED") {
             throw "Failed to stop service"
         }
@@ -45,8 +44,7 @@ function Start-ServiceOnServer {
     )
     try {
         Write-Host "Starting $serviceName service on $server..."
-        $startCommand = "sc.exe \\$server start $serviceName"
-        $output = Invoke-Expression $startCommand 2>&1
+        $output = & sc.exe \\$server start $serviceName 2>&1
         if ($output -match "FAILED") {
             throw "Failed to start service"
         }
@@ -65,7 +63,7 @@ function Query-ServiceStatus {
     )
     try {
         Write-Host "Querying status of $serviceName service on $server..."
-        $queryResult = sc.exe \\$server queryex $serviceName
+        $queryResult = & sc.exe \\$server queryex $serviceName
         if ($queryResult -notmatch "STATE\s*:\s*4\s*RUNNING") {
             Write-Host "Service $serviceName is not running on $server." -ForegroundColor Yellow
             $errors += "Service not running on $server"
