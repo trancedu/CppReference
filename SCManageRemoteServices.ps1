@@ -26,7 +26,10 @@ function Stop-ServiceOnServer {
     try {
         Write-Host "Stopping $serviceName service on $server..."
         $stopCommand = "sc.exe \\$server stop $serviceName"
-        Invoke-Expression $stopCommand
+        $output = Invoke-Expression $stopCommand 2>&1
+        if ($output -match "FAILED") {
+            throw "Failed to stop service"
+        }
         Write-Host "$serviceName service stop command sent to $server."
     } catch {
         Write-Host "Failed to send stop command for $serviceName service on $server." -ForegroundColor Red
@@ -43,7 +46,10 @@ function Start-ServiceOnServer {
     try {
         Write-Host "Starting $serviceName service on $server..."
         $startCommand = "sc.exe \\$server start $serviceName"
-        Invoke-Expression $startCommand
+        $output = Invoke-Expression $startCommand 2>&1
+        if ($output -match "FAILED") {
+            throw "Failed to start service"
+        }
         Write-Host "$serviceName service start command sent to $server."
     } catch {
         Write-Host "Failed to send start command for $serviceName service on $server." -ForegroundColor Red
